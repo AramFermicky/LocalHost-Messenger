@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация в LocalHost (mini)</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Используем модульный подход Firebase v9+ -->
+  <script type="module">
+    // Импортируем необходимые Firebase модули
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    
+    // Исправленный Firebase конфиг (убраны пробелы в databaseURL!)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPjjwqSk6EG6k3QZ6Yf5UzqDo5LEfo6GY",
+      authDomain: "localhost-mini.firebaseapp.com",
+      databaseURL: "https://localhost-mini-default-rtdb.firebaseio.com",
+      projectId: "localhost-mini",
+      storageBucket: "localhost-mini.firebasestorage.app",
+      messagingSenderId: "465050030132",
+      appId: "1:465050030132:web:49058758de3b054379ba61"
+    };
+
+    // Инициализация Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    // Проверка авторизации при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          window.location.href = 'chat.html';
+        }
+      });
+      
+      // Обработка регистрации
+      document.getElementById('register-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        
+        document.querySelector('.auth-container').innerHTML = `
+          <div class="loading-indicator">
+            <div class="spinner"></div>
+            <p>Создание аккаунта...</p>
+          </div>
+        `;
+        
+        createUserWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            setTimeout(() => window.location.href = 'chat.html', 1200);
+          })
+          .catch((error) => {
+            alert(`Ошибка: ${error.message}`);
+            document.querySelector('.auth-container').innerHTML = `
+              <div class="auth-container">
+                <h1>LocalHost (mini)</h1>
+                <p>Создайте аккаунт за 20 секунд</p>
+                
+                <form id="register-form">
+                  <input type="email" id="email" placeholder="Email" required>
+                  <input type="password" id="password" placeholder="Пароль (мин. 6 символов)" required minlength="6">
+                  <button type="submit">Зарегистрироваться</button>
+                </form>
+                
+                <div class="auth-footer">
+                  <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+                  <a href="auth.html">Назад к выбору</a>
+                </div>
+              </div>
+            `;
+          });
+      });
+    });
+  </script>
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <h1>LocalHost (mini)</h1>
+    <p>Создайте аккаунт за 20 секунд</p>
+    
+    <form id="register-form">
+      <input type="email" id="email" placeholder="Email" required>
+      <input type="password" id="password" placeholder="Пароль (мин. 6 символов)" required minlength="6">
+      <button type="submit">Зарегистрироваться</button>
+    </form>
+    
+    <div class="auth-footer">
+      <p>Уже есть аккаунт? <a href="login.html">Войти</a></p>
+      <a href="auth.html">Назад к выбору</a>
+    </div>
+  </div>
+</body>
+</html>
