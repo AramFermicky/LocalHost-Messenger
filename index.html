@@ -2,16 +2,38 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="LocalHost (mini)">
+  <meta name="apple-mobile-web-app-title" content="LocalHost">
+  <meta name="theme-color" content="#4361ee">
+  <meta name="msapplication-navbutton-color" content="#4361ee">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="msapplication-starturl" content="/">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+  <link rel="icon" type="image/png" href="icons/icon-192x192.png" sizes="192x192">
   <title>LocalHost (mini)</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Используем модульный подход Firebase v9+ -->
   <script type="module">
+    // Регистрация сервис-воркера для PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('ServiceWorker registered:', registration.scope);
+          })
+          .catch(error => {
+            console.log('ServiceWorker registration failed:', error);
+          });
+      });
+    }
+
     // Импортируем необходимые Firebase модули
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     
-    // Исправленный Firebase конфиг (убраны пробелы в databaseURL!)
     const firebaseConfig = {
       apiKey: "AIzaSyCPjjwqSk6EG6k3QZ6Yf5UzqDo5LEfo6GY",
       authDomain: "localhost-mini.firebaseapp.com",
@@ -22,78 +44,45 @@
       appId: "1:465050030132:web:49058758de3b054379ba61"
     };
 
-    // Инициализация Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     
-    // Глобальная обработка ошибок
-    window.onerror = function(message, source, lineno, colno, error) {
-      document.querySelector('.loading-text').textContent = 'Ошибка: ' + (error ? error.message : message);
-      document.querySelector('.loading-text').style.color = '#ff4757';
-      
-      // Через 2 секунды перенаправляем на auth.html
-      setTimeout(() => {
-        window.location.href = 'auth.html';
-      }, 2000);
-      
-      return true;
-    };
-
-    // Инициализация Firebase с обработкой ошибок
     document.addEventListener('DOMContentLoaded', () => {
-      try {
-        // Анимация загрузки
-        const dots = document.querySelectorAll('.dot');
-        const loadingText = document.querySelector('.loading-text');
-        let dotIndex = 0;
+      const dots = document.querySelectorAll('.dot');
+      const loadingText = document.querySelector('.loading-text');
+      let dotIndex = 0;
+      
+      const dotAnimation = setInterval(() => {
+        dots.forEach(dot => dot.style.opacity = '0.3');
+        dots[dotIndex].style.opacity = '1';
+        dotIndex = (dotIndex + 1) % dots.length;
+      }, 300);
+      
+      const firebaseTimeout = setTimeout(() => {
+        clearInterval(dotAnimation);
+        loadingText.textContent = 'Подключение заняло слишком много времени...';
+        loadingText.style.color = '#ff4757';
         
-        const dotAnimation = setInterval(() => {
-          dots.forEach(dot => dot.style.opacity = '0.3');
-          dots[dotIndex].style.opacity = '1';
-          dotIndex = (dotIndex + 1) % dots.length;
-        }, 300);
+        setTimeout(() => window.location.href = 'auth.html', 1500);
+      }, 8000);
+      
+      onAuthStateChanged(auth, (user) => {
+        clearTimeout(firebaseTimeout);
+        clearInterval(dotAnimation);
         
-        // Таймаут на случай проблем с Firebase
-        const firebaseTimeout = setTimeout(() => {
-          clearInterval(dotAnimation);
-          loadingText.textContent = 'Подключение заняло слишком много времени...';
-          loadingText.style.color = '#ff4757';
-          
-          setTimeout(() => {
-            window.location.href = 'auth.html';
-          }, 1500);
-        }, 8000);
-        
-        // Проверка аутентификации
-        onAuthStateChanged(auth, (user) => {
-          clearTimeout(firebaseTimeout);
-          clearInterval(dotAnimation);
-          
-          loadingText.textContent = user ? 'Загрузка чата...' : 'Подготовка к авторизации...';
-          
-          setTimeout(() => {
-            window.location.href = user ? 'chat.html' : 'auth.html';
-          }, 500);
-        }, (error) => {
-          clearTimeout(firebaseTimeout);
-          clearInterval(dotAnimation);
-          loadingText.textContent = `Ошибка: ${error.message}`;
-          loadingText.style.color = '#ff4757';
-          
-          setTimeout(() => {
-            window.location.href = 'auth.html';
-          }, 1500);
-        });
-        
-      } catch (error) {
-        console.error("Критическая ошибка инициализации Firebase:", error);
-        document.querySelector('.loading-text').textContent = `Ошибка: ${error.message}`;
-        document.querySelector('.loading-text').style.color = '#ff4757';
+        loadingText.textContent = user ? 'Загрузка чата...' : 'Подготовка к авторизации...';
         
         setTimeout(() => {
-          window.location.href = 'auth.html';
-        }, 1500);
-      }
+          window.location.href = user ? 'chat.html' : 'auth.html';
+        }, 500);
+      }, (error) => {
+        clearTimeout(firebaseTimeout);
+        clearInterval(dotAnimation);
+        loadingText.textContent = `Ошибка: ${error.message}`;
+        loadingText.style.color = '#ff4757';
+        
+        setTimeout(() => window.location.href = 'auth.html', 1500);
+      });
     });
   </script>
 </head>
