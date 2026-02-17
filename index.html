@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="LocalHost (mini)">
+  <meta name="apple-mobile-web-app-title" content="LocalHost">
+  <meta name="theme-color" content="#4361ee">
+  <meta name="msapplication-navbutton-color" content="#4361ee">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="msapplication-starturl" content="/">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+  <link rel="icon" type="image/png" href="icons/icon-192x192.png" sizes="192x192">
+  <title>LocalHost (mini)</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module">
+    // Регистрация сервис-воркера для PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('ServiceWorker registered:', registration.scope);
+          })
+          .catch(error => {
+            console.log('ServiceWorker registration failed:', error);
+          });
+      });
+    }
+
+    // Импортируем необходимые Firebase модули
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPjjwqSk6EG6k3QZ6Yf5UzqDo5LEfo6GY",
+      authDomain: "localhost-mini.firebaseapp.com",
+      databaseURL: "https://localhost-mini-default-rtdb.firebaseio.com",
+      projectId: "localhost-mini",
+      storageBucket: "localhost-mini.firebasestorage.app",
+      messagingSenderId: "465050030132",
+      appId: "1:465050030132:web:49058758de3b054379ba61"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const dots = document.querySelectorAll('.dot');
+      const loadingText = document.querySelector('.loading-text');
+      let dotIndex = 0;
+      
+      const dotAnimation = setInterval(() => {
+        dots.forEach(dot => dot.style.opacity = '0.3');
+        dots[dotIndex].style.opacity = '1';
+        dotIndex = (dotIndex + 1) % dots.length;
+      }, 300);
+      
+      const firebaseTimeout = setTimeout(() => {
+        clearInterval(dotAnimation);
+        loadingText.textContent = 'Подключение заняло слишком много времени...';
+        loadingText.style.color = '#ff4757';
+        
+        setTimeout(() => window.location.href = 'auth.html', 1500);
+      }, 8000);
+      
+      onAuthStateChanged(auth, (user) => {
+        clearTimeout(firebaseTimeout);
+        clearInterval(dotAnimation);
+        
+        loadingText.textContent = user ? 'Загрузка чата...' : 'Подготовка к авторизации...';
+        
+        setTimeout(() => {
+          window.location.href = user ? 'chat.html' : 'auth.html';
+        }, 500);
+      }, (error) => {
+        clearTimeout(firebaseTimeout);
+        clearInterval(dotAnimation);
+        loadingText.textContent = `Ошибка: ${error.message}`;
+        loadingText.style.color = '#ff4757';
+        
+        setTimeout(() => window.location.href = 'auth.html', 1500);
+      });
+    });
+  </script>
+</head>
+<body class="loading-screen">
+  <div class="loader-container">
+    <div class="logo">
+      <div class="logo-icon">💬</div>
+      <h1>LocalHost (mini)</h1>
+      <p>Быстрый чат для новых пользователей</p>
+    </div>
+    
+    <div class="loading-animation">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    
+    <div class="loading-text">Подключение к серверу...</div>
+  </div>
+</body>
+</html>

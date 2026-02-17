@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalHost (mini) - Чат</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Используем модульный подход Firebase v9+ -->
+  <script type="module">
+    // Импортируем необходимые Firebase модули
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getDatabase, ref, push, onChildAdded, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    
+    // Исправленный Firebase конфиг (убраны пробелы в databaseURL!)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPjjwqSk6EG6k3QZ6Yf5UzqDo5LEfo6GY",
+      authDomain: "localhost-mini.firebaseapp.com",
+      databaseURL: "https://localhost-mini-default-rtdb.firebaseio.com",
+      projectId: "localhost-mini",
+      storageBucket: "localhost-mini.firebasestorage.app",
+      messagingSenderId: "465050030132",
+      appId: "1:465050030132:web:49058758de3b054379ba61"
+    };
+
+    // Инициализация Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
+    
+    // Проверка авторизации при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+      onAuthStateChanged(auth, (user) => {
+        if (!user) {
+          window.location.href = 'auth.html';
+          return;
+        }
+        
+        // Настройка чата
+        setupChat(user);
+        
+        // Логика выхода
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            signOut(auth).then(() => {
+              window.location.href = 'index.html';
+            }).catch((error) => {
+              console.error("Ошибка выхода:", error);
+              alert(`Не удалось выйти: ${error.message}`);
+            });
+          });
+        }
+      });
+    });
+    
+    // Настройка чата
+    function setupChat(user) {
+      const messagesRef = ref(database, 'main-chat');
+      const messagesContainer = document.getElementById('chat-messages');
+      const messageInput = document.getElementById('message-input');
+      const sendBtn = document.getElementById('send-btn');
+      
+      // Загрузка сообщений
+      onChildAdded(messagesRef, (snapshot) => {
+        const message = snapshot.val();
+        const isOwn = message.user === user.email;
+        
+        const messageEl = document.createElement('div');
+        messageEl.classList.add('message');
+        if (isOwn) messageEl.classList.add('own');
+        
+        messageEl.innerHTML = `
+          <div class="message-content">${message.text}</div>
+          <div class="message-meta">${new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+        `;
+        
+        messagesContainer.appendChild(messageEl);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      });
+      
+      // Отправка сообщения
+      const sendMessage = () => {
+        const text = messageInput.value.trim();
+        if (!text) return;
+        
+        push(messagesRef, {
+          text: text,
+          user: user.email,
+          timestamp: serverTimestamp() // Используем серверное время
+        });
+        
+        messageInput.value = '';
+      };
+      
+      sendBtn.addEventListener('click', sendMessage);
+      messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="chat-container">
+    <header class="chat-header">
+      <h1>LocalHost (mini)</h1>
+      <div class="status">Главный чат (покинуть нельзя)</div>
+    </header>
+    
+    <div id="chat-messages" class="chat-messages"></div>
+    
+    <div class="chat-input">
+      <input type="text" id="message-input" placeholder="Введите сообщение...">
+      <button id="send-btn">Отправить</button>
+    </div>
+    
+    <div class="chat-footer">
+      <a href="profile.html">Профиль</a> | 
+      <a href="settings.html">Настройки</a> | 
+      <a href="#" id="logout-btn">Выйти</a>
+    </div>
+  </div>
+</body>
+</html>

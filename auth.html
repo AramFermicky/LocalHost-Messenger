@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalHost (mini)</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Используем модульный подход Firebase v9+ -->
+  <script type="module">
+    // Импортируем необходимые Firebase модули
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    
+    // Исправленный Firebase конфиг (убраны пробелы в databaseURL!)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPjjwqSk6EG6k3QZ6Yf5UzqDo5LEfo6GY",
+      authDomain: "localhost-mini.firebaseapp.com",
+      databaseURL: "https://localhost-mini-default-rtdb.firebaseio.com",
+      projectId: "localhost-mini",
+      storageBucket: "localhost-mini.firebasestorage.app",
+      messagingSenderId: "465050030132",
+      appId: "1:465050030132:web:49058758de3b054379ba61"
+    };
+
+    // Инициализация Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    
+    // Проверка авторизации при загрузке страницы
+    document.addEventListener('DOMContentLoaded', () => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          window.location.href = 'chat.html';
+        }
+      });
+    });
+  </script>
+</head>
+<body class="auth-page">
+  <div class="auth-container">
+    <h1>LocalHost (mini)</h1>
+    <p class="subtitle">Быстрый и простой чат для общения</p>
+    
+    <div class="auth-options">
+      <a href="login.html" class="auth-option">
+        <div class="option-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+        </div>
+        <h2>Войти в аккаунт</h2>
+        <p>Уже есть аккаунт? Войдите здесь</p>
+      </a>
+      
+      <a href="register.html" class="auth-option">
+        <div class="option-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </div>
+        <h2>Создать аккаунт</h2>
+        <p>Зарегистрируйтесь за 20 секунд</p>
+      </a>
+    </div>
+    
+    <div class="back-link">
+      <a href="index.html">
+        ← Вернуться на главную
+      </a>
+    </div>
+  </div>
+</body>
+</html>
